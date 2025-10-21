@@ -17,7 +17,7 @@ CoordMode("ToolTip", "Screen")
 CoordMode("Mouse", "Screen")
 
 SetKeyDelay(-1, -1)
-; ProcessSetPriority("High")
+ProcessSetPriority("Normal")
 A_HotkeyInterval := 0
 
 

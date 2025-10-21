@@ -54,9 +54,7 @@
 
 :X?::-rs::ClipSend("--recurse-submodules")
 
-:X?::ghm::ClipSend("https://github.com/schmidt-x")
-
-:X?::ghr::ClipSend("https://github.com/schmidt-x?tab=repositories")
+:X?::ghr::ClipSend("https://github.com/dotnetasyncawait?tab=repositories")
 
 :?O::gcm::git cm `"`"{left}
 
@@ -174,7 +172,12 @@
 
 :X?:``ahk::SendInput("``````ahk+{`n 2}``````{Up}")
 
-:X?:``cs::SendInput("``````csharp+{`n 2}``````{Up}")
+:X?:``cs:: {
+	switch WinGetProcessName("A") {
+		case Obsidian.ProcessName: SendInput("``````cs`n")
+		default: SendInput("``````cs+{`n 2}``````{Up}")
+	}
+}
 
 :X?::kt::ClipSend("https://key-test.com/")
 

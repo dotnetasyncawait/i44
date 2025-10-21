@@ -1,6 +1,8 @@
 #Include <Misc\CommandRunner>
+
 #Include Commands\FKeys.ahk
 #Include Commands\New.ahk
+#Include Commands\SleepShutdown.ahk
 
 class Commands {
 	
