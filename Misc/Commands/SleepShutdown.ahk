@@ -17,7 +17,7 @@ class SleepShutdown {
 		
 		static CreateCaller() {
 			caller := SleepShutdown.Caller("sleep")
-			caller.Func := () => (caller.IsActive := false, SuspendPC())
+			caller.Func := () => (caller.ScheduledAt := "", SuspendPC())
 			return caller
 		}
 	}
@@ -29,7 +29,7 @@ class SleepShutdown {
 		
 		static CreateCaller() {
 			caller := SleepShutdown.Caller("shdown")
-			caller.Func := () => (caller.IsAcive := false, Shutdown(0x8)) ; EWX_POWEROFF := 0x00000008
+			caller.Func := () => (caller.ScheduledAt := "", Shutdown(0x8)) ; EWX_POWEROFF := 0x00000008
 			return caller
 		}
 	}
@@ -66,7 +66,7 @@ class SleepShutdown {
 			return
 		}
 		
-		regExp := "i)^(\d{1,2}):([0-5]?\d)(?:\:([0-5]?\d))?(pm|am)$"
+		regExp := "i)^(\d{1,2}):([0-5]\d)(?:\:([0-5]\d))?(pm|am)$"
 		
 		if not RegExMatch(arg.Value, regExp, &info) {
 			output := this.GetInvalidFormat(caller.Name)
@@ -92,10 +92,9 @@ class SleepShutdown {
 			totalSeconds := 86400 + totalSeconds
 		}
 		
-		caller.IsActive := true
+		SetTimer(caller.Func, -(totalSeconds * 1000))
 		caller.ScheduledAt := atTime
 		
-		SetTimer(caller.Func, -(totalSeconds * 1000))
 		output := this.GetScheduledOutput(caller.Name, atTime, totalSeconds)
 	}
 	
@@ -122,12 +121,11 @@ class SleepShutdown {
 		s := (t := info[3]) ? t : 0
 		
 		totalSeconds := (h * 3600) + (m * 60) + s
-		atTime := DateAdd(A_Now, totalSeconds, "Seconds")
+		SetTimer(caller.Func, -(totalSeconds * 1000))
 		
-		caller.IsActive := true
+		atTime := DateAdd(A_Now, totalSeconds, "Seconds")
 		caller.ScheduledAt := atTime
 		
-		SetTimer(caller.Func, -(totalSeconds * 1000))
 		output := this.GetScheduledOutput(caller.Name, atTime, totalSeconds)
 	}
 	
@@ -136,14 +134,17 @@ class SleepShutdown {
 	 * @param {String} output 
 	 */
 	static HandleOff(caller, &output) {
-		if not caller.IsActive {
+		if not caller.ScheduledAt {
 			output := Format("No scheduled {} is found", caller.Name)
 			return
 		}
 		
-		caller.IsActive := false
+		atFormatted := this.GetAtFormatted(caller.ScheduledAt)
+		
 		SetTimer(caller.Func, 0)
-		output := Format("Scheduled {} at {} is turned off", caller.Name, this.GetAtFormatted(caller.ScheduledAt))
+		caller.ScheduledAt := ""
+		
+		output := Format("Scheduled {} at {} is turned off", caller.Name, atFormatted)
 	}
 	
 	/**
@@ -151,7 +152,7 @@ class SleepShutdown {
 	 * @param {String} output 
 	 */
 	static HandleShow(caller, &output) {
-		if not caller.IsActive {
+		if not caller.ScheduledAt {
 			output := Format("No scheduled {} is found", caller.Name)
 			return
 		}
@@ -177,11 +178,11 @@ class SleepShutdown {
 			show:          Displays the scheduled event
 			off:           Disables the scheduled event
 
-			<in-time>: [NNh][NNm][NNs] (at least one unit required)
-			<at-time>: hh:mm[:ss]{am|pm}
+			<in-time>: [[N]Nh][[N]Nm][[N]Ns] (at least one unit required)
+			<at-time>: [h]h:mm[:ss]{am|pm}
 			
-			Leading zeros are optional (eg: at 1:15pm, in 1h15m)
-		)", callerName)
+			Examples: {} at 1:15pm, {} in 1h15m
+		)", callerName, callerName, callerName)
 	
 	static GetInvalidFormat(callerName) => "Invalid time format. " this.GetUsage(callerName)
 	
@@ -193,6 +194,5 @@ class SleepShutdown {
 		Name := ""
 		Func := ""
 		ScheduledAt := ""
-		IsActive := false
 	}
 }
