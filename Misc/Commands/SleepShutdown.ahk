@@ -170,7 +170,7 @@ class SleepShutdown {
 	
 	static GetUsage(callerName) => Format("
 		(
-			Usage: {} COMMAND
+			Usage: {1} COMMAND
 
 			Commands:
 			in <in-time>:  Schedules an event in the specified time
@@ -181,8 +181,8 @@ class SleepShutdown {
 			<in-time>: [[N]Nh][[N]Nm][[N]Ns] (at least one unit required)
 			<at-time>: [h]h:mm[:ss]{am|pm}
 			
-			Examples: {} at 1:15pm, {} in 1h15m
-		)", callerName, callerName, callerName)
+			Examples: {1} at 1:15pm, {1} in 1h15m
+		)", callerName)
 	
 	static GetInvalidFormat(callerName) => "Invalid time format. " this.GetUsage(callerName)
 	

@@ -10,8 +10,8 @@ class FKeys {
 	 * @param {CommandRunner.ArgsIter} args
 	 */
 	static Handle(args, _, &output) {
-		if not args.Next(&arg) {
-			output := this._GetUsage()
+		if not args.Next(&arg) || arg.Value == "-h" {
+			output := this._Usage
 			return
 		}
 		
@@ -24,37 +24,29 @@ class FKeys {
 				SetFilterKeys(false)
 				output := this._GetOutputValues()
 			
-			case "st", "status":
+			case "st":
 				output := this._GetOutputValues()
 				
 			case "set":
-				this._SetOptions(args, &output)
-			
-			case "-h", "--help":
-				output := this._GetUsage()
+				this._HandleSet(args, &output)
 			
 			default: 
-				output := Format("Invalid command '{}'.", arg.Value)
+				output := Format("Invalid command '{}'. {}", arg.Value, this._Usage)
 		}
 	}
 	
 		
-	static _SetOptions(args, &output) {
-		state := waitMs := delayMs := repeatMs := bounceMs := unset
+	static _HandleSet(args, &output) {
+		if not args.Next(&arg) || arg.Value == "-h" {
+			output := this._UsageSet
+			return
+		}
 		
-		if not args.Next(&arg) {
-			output := this._GetHelpForSet()
-			return
-		}
-			
-		if arg.Value == "-h" || arg.Value == "--help" {
-			output := this._GetHelpForSet()
-			return
-		}
+		state := waitMs := delayMs := repeatMs := bounceMs := unset
 		
 		loop {
 			switch option := arg.Value {
-				case "-s", "--state":
+				case "-s":
 					if not args.Next(&next) {
 						output := Format("[{}] Value is missing.", option)
 						return
@@ -63,36 +55,36 @@ class FKeys {
 						case "on":  state := true
 						case "off": state := false
 						default:
-							output := Format("[{}] Invalid argument '{}'.", option, next.Value)
+							output := Format("[{}] Invalid value '{}'.", option, next.Value)
 							return
 					}
 				
-				case "-w", "--wait-ms":
+				case "-w":
 					if not this._TryGetValue(args, option, &output, &value) {
 						return
 					}
 					waitMs := value
 				
-				case "-d", "--delay-ms":
+				case "-d":
 					if not this._TryGetValue(args, option, &output, &value) {
 						return
 					}
 					delayMs := value
 					
-				case "-r", "--repeat-ms":
+				case "-r":
 					if not this._TryGetValue(args, option, &output, &value) {
 						return
 					}
 					repeatMs := value
 				
-				case "-b", "--bounce-ms":
+				case "-b":
 					if not this._TryGetValue(args, option, &output, &value) {
 						return
 					}
 					bounceMs := value
 				
 				default:
-					output := Format("Invalid option '{}'.", option)
+					output := Format("Invalid setting '{}'. {}", option, this._UsageSet)
 					return
 			}
 		} until not args.Next(&arg)
@@ -132,29 +124,31 @@ class FKeys {
 		)", state, fKeys.WaitMSec, fKeys.DelayMSec, fKeys.RepeatMSec, fKeys.BounceMSec)
 	}
 	
-	static _GetUsage() => "
+	static _Usage := "
 		(
 			Usage: fkeys [OPTIONS] COMMAND
 			
 			Commands:
 			on:          Enable FilterKeys
 			off:         Disable FilterKeys
-			st, status:  Show FilterKeys values
-			set:         Set FilterKeys values
+			st:          Show FilterKeys values
+			set <args>:  Set FilterKeys values
 			
-			Global Options:
-			-h, --help:  Print usage
+			Global options:
+			-h:  Get usage
 		)"
 	
-	static _GetHelpForSet() => Format("
+	static _UsageSet := "
 		(
-			Usage: fkeys set [OPTIONS]
+			Usage: fkeys set (SETTING VALUE)...
 			
-			Options:
-			-s, --state  string:  Turn on/off FilterKeys ('on', 'off')
-			-w, --wait-ms   u32:  Set WaitMs
-			-d, --delay-ms  u32:  Set DelayMs
-			-r, --repeat-ms u32:  Set RepeatMs
-			-b, --bounce-ms u32:  Set BounceMs
-		)")
+			Settings:
+			-s string:  Turn on/off FilterKeys. Values: on, off.
+			-w u32:     Set WaitMs
+			-d u32:     Set DelayMs
+			-r u32:     Set RepeatMs
+			-b u32:     Set BounceMs
+			
+			Example: fkeys set -d 200 -r 16
+		)"
 }

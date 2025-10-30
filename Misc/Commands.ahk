@@ -17,8 +17,9 @@ class Commands {
 			"rp",    this._Rp.Bind(this),
 			"inlh",  this._Inlh.Bind(this),
 			"hid",   this._Hid.Bind(this),
-			"b2h",   this._B2H.Bind(this),
-			"b2d",   this._B2D.Bind(this),
+			"hex",   this._Hex.Bind(this),
+			"dec",   this._Dec.Bind(this),
+			"bin",   this._Bin.Bind(this),
 		)
 	}
 	
@@ -99,54 +100,121 @@ class Commands {
 	}
 	
 	static _Hid(args, _, &output) {
-		if not args.Next(&arg) {
-			output := GetHelp()
+		if not args.Next(&arg) || arg.Value == "-h" {
+			output := GetUsage()
 			return
 		}
 		
 		switch arg.Value {
 			case "ping":
 				output := I44.Ping(&ms, &us) ? Format("{} ms`n{} us", ms, us) : "Keyboard not responsive."
-			
-			case "-h", "--help":
-				output := GetHelp()
-			
 			default:
-				output := Format("Invalid argument '{}'.", arg.Value)
+				output := Format("Invalid argument '{}'. {}", arg.Value, GetUsage())
 		}
 		
 		return
 		
-		GetHelp() => "
+		GetUsage() => "
 		(
 			Usage: hid [OPTIONS] COMMAND
 			
 			Commands:
-			hid:  Ping the keyboard
+			ping:  Ping the keyboard
 			
 			Options:
-			-h, --help:  Print usage
+			-h:  Print usage
 		)"
 	}
 	
-	static _B2H(args, _, &output) {
-		if not args.Next(&arg) {
+	/**
+	 * Binary to Hex and Decimal.
+	 */
+	static _Bin(args, _, &output) {
+		if args.IsEmpty {
 			output := "Empty input."
 			return
 		}
 		
-		res := Bin2Hex(arg.Value)
-		output := (res != "") ? res : "Invalid input."
+		while args.Next(&arg) {
+			value := arg.Value
+			
+			if not TryBinaryToInteger(value, &num) {
+				output := Format("Invalid value '{}' (position {}).", value, A_Index)
+				return
+			}
+			
+			output .= Format("- {} -> 0x{:X} -> {}`n", value, num, num)
+		}
+		
+		return
+		
+		TryBinaryToInteger(value, &num) {
+			res := 0
+			
+			j := 0
+			i := StrLen(value) + 1
+			
+			while --i > 0 {
+				switch SubStr(value, i, 1) {
+					case "0": ; break
+					case "1": res += 1 << j
+					case "_": continue
+					default:  return false
+				}
+				j++
+			}
+			
+			num := res
+			return true
+		}
+	}
+
+	/**
+	 * Decimal to Hex and Binary.
+	 */
+	static _Dec(args, _, &output) {
+		if args.IsEmpty {
+			output := "Empty input."
+			return
+		}
+		
+		while args.Next(&arg) {
+			value := arg.Value
+			
+			if not IsInteger(value) {
+				output := Format("Invalid value '{}' (position {}).", value, A_Index)
+				return
+			}
+			
+			num := Integer(value)
+			output .= Format("- {} -> 0x{:X} -> {}`n", num, num, IntegerToBinary(num))
+		}
 	}
 	
-	static _B2D(args, _, &output) {
-		if not args.Next(&arg) {
+	/**
+	 * Hex to Decimal and Binary.
+	 */
+	static _Hex(args, _, &output) {
+		if args.IsEmpty {
 			output := "Empty input."
 			return
 		}
 		
-		res := Bin2Dec(arg.Value)
-		output := res != -1 ? res : "Invalid input."
+		while args.Next(&arg) {
+			value := arg.Value
+			
+			if not IsXDigit(value) {
+				output := Format("Invalid value '{}' (position {}).", value, A_Index)
+				return
+			}
+			
+			if SubStr(value, 1, 2) != "0x" {
+				value := "0x" value
+			}
+			
+			num := Integer(value)
+			output .= Format("- {} -> {} -> {}`n", value, num, IntegerToBinary(num))
+		}
 	}
 	
 	; --- helpers ---

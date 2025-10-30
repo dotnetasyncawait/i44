@@ -12,7 +12,7 @@ class New {
 	 */
 	static Handle(args, hwnd, &output) {
 		if args.IsEmpty {
-			output := this._GetHelp()
+			output := this._Usage
 			return
 		}
 		
@@ -26,16 +26,16 @@ class New {
 			}
 			
 			switch arg.Value {
-				case "-o", "--open":
+				case "-o":
 					open := true
 					continue
 				
-				case "-h", "--help":
-					output := this._GetHelp()
+				case "-h":
+					output := this._Usage
 					return
 				
 				default:
-					output := Format("Invalid argument '{}'.", arg.Value)
+					output := Format("Invalid argument '{}'. {}", arg.Value, this._Usage)
 					return
 			}
 		}
@@ -77,12 +77,12 @@ class New {
 		}
 	}
 	
-	static _GetHelp() => Format("
+	static _Usage := "
 		(
 			Usage: new [OPTIONS] FILENAME
 			
 			Options:
-			-o, --open:  Open file/folder in editor
-			-h, --help:  Print usage
-		)")
+			-o:  Open file/folder in editor
+			-h:  Print usage
+		)"
 }
