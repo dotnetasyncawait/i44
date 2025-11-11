@@ -1,5 +1,6 @@
 #Include <Misc\CommandRunner>
 #Include <Apps\VsCode>
+#Include <Apps\WindowsTerminal>
 #Include <Apps\Explorer>
 
 class New {
@@ -9,10 +10,11 @@ class New {
 	
 	/**
 	 * @param {CommandRunner.ArgsIter} args
+	 * @param {CommandRunner.Output} output
 	 */
-	static Handle(args, hwnd, &output) {
+	static Handle(args, hwnd, output) {
 		if args.IsEmpty {
-			output := this._Usage
+			output.Write(this._Usage)
 			return
 		}
 		
@@ -31,27 +33,27 @@ class New {
 					continue
 				
 				case "-h":
-					output := this._Usage
+					output.Write(this._Usage)
 					return
 				
 				default:
-					output := Format("Invalid argument '{}'. {}", arg.Value, this._Usage)
+					output.WriteUnknownCommand(arg.Value, this._Usage)
 					return
 			}
 		}
 		
 		if not fileName {
-			output := "File name not provided."
+			output.WriteError("file name not provided.")
 			return
 		}
 		
 		if WinGetProcessName(hwnd) != Explorer.ProcessName {
-			output := "Not in Explorer."
+			output.WriteError("not in Explorer.")
 			return
 		}
 		
 		if not Paths.TryGet(&path, hwnd) {
-			output := "Path not found."
+			output.WriteError("path not found.")
 			return
 		}
 		
@@ -62,18 +64,16 @@ class New {
 				DirCreate(fileFullName)
 			} else {
 				SplitPath(fileFullName, , &dir)
-				if not DirExist(dir) {
-					DirCreate(dir)
-				}
+				DirCreate(dir)
 				FileAppend("", fileFullName)
 			}
 		} catch Error as err {
-			output := err.Message
+			output.WriteError(err.Message)
 			return
 		}
 		
 		if open {
-			Run(Format('"{}" "{}"', VsCode.FullProcessName, fileFullName))
+			VsCode.Open(fileFullName)
 		}
 	}
 	
@@ -82,7 +82,7 @@ class New {
 			Usage: new [OPTIONS] FILENAME
 			
 			Options:
-			-o:  Open file/folder in editor
-			-h:  Print usage
+			 -o:  Open file/folder in editor
+			 -h:  Print usage
 		)"
 }

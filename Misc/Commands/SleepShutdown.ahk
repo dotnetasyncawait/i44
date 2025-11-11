@@ -10,9 +10,9 @@ class SleepShutdown {
 		)
 	}
 	
-	static Sleep(args, _, &output) {
+	static Sleep(args, _, output) {
 		static caller := CreateCaller()
-		this.SleepShutdown(args, caller, &output)
+		this.SleepShutdown(args, caller, output)
 		return
 		
 		static CreateCaller() {
@@ -22,9 +22,9 @@ class SleepShutdown {
 		}
 	}
 	
-	static Shutdown(args, _, &output) {
+	static Shutdown(args, _, output) {
 		static caller := CreateCaller()
-		this.SleepShutdown(args, caller, &output)
+		this.SleepShutdown(args, caller, output)
 		return
 		
 		static CreateCaller() {
@@ -37,45 +37,44 @@ class SleepShutdown {
 	/**
 	 * @param {CommandRunner.ArgsIter} args 
 	 * @param {SleepShutdown.Caller} caller 
-	 * @param {String} output 
+	 * @param {CommandRunner.Output} output
 	 */
-	static SleepShutdown(args, caller, &output) {
+	static SleepShutdown(args, caller, output) {
 		if not args.Next(&arg) || arg.Value == "-h" {
-			output := this.GetUsage(caller.Name)
+			output.Write(this.GetUsage(caller.Name))
 			return
 		}
 		
 		switch arg.Value {
-			case "at":   this.HandleAt(args, caller, &output)
-			case "in":   this.HandleIn(args, caller, &output)
-			case "off":  this.HandleOff(caller, &output)
-			case "show": this.HandleShow(caller, &output)
-			default:
-				output := Format("Unknown command '{}'. {}", arg.Value, this.GetUsage(caller.Name))
+			case "at":   this.HandleAt(args, caller, output)
+			case "in":   this.HandleIn(args, caller, output)
+			case "off":  this.HandleOff(caller, output)
+			case "show": this.HandleShow(caller, output)
+			default: output.WriteUnknownCommand(arg.Value, this.GetUsage(caller.Name))
 		}
 	}
 	
 	/**
 	 * @param {CommandRunner.ArgsIter} args 
 	 * @param {SleepShutdown.Caller} caller 
-	 * @param {String} output 
+	 * @param {CommandRunner.Output} output
 	 */
-	static HandleAt(args, caller, &output) {
+	static HandleAt(args, caller, output) {
 		if not args.Next(&arg) {
-			output := "Time value is expected. " this.GetUsage(caller.Name)
+			output.WriteError("Time value is expected. " this.GetUsage(caller.Name))
 			return
 		}
 		
 		regExp := "i)^(\d{1,2}):([0-5]\d)(?:\:([0-5]\d))?(pm|am)$"
 		
 		if not RegExMatch(arg.Value, regExp, &info) {
-			output := this.GetInvalidFormat(caller.Name)
+			output.WriteError(this.GetInvalidFormat(caller.Name))
 			return
 		}
 		
 		h := info[1]
 		if h < 1 || h > 12 {
-			output := this.GetInvalidFormat(caller.Name)
+			output.WriteError(this.GetInvalidFormat(caller.Name))
 			return
 		}
 		
@@ -95,24 +94,24 @@ class SleepShutdown {
 		SetTimer(caller.Func, -(totalSeconds * 1000))
 		caller.ScheduledAt := atTime
 		
-		output := this.GetScheduledOutput(caller.Name, atTime, totalSeconds)
+		output.Write(this.GetScheduledOutput(caller.Name, atTime, totalSeconds))
 	}
 	
 	/**
 	 * @param {CommandRunner.ArgsIter} args 
 	 * @param {SleepShutdown.Caller} caller 
-	 * @param {String} output 
+	 * @param {CommandRunner.Output} output
 	 */
-	static HandleIn(args, caller, &output) {
+	static HandleIn(args, caller, output) {
 		if not args.Next(&arg) {
-			output := "Time value is expected. " this.GetUsage(caller.Name)
+			output.WriteError("Time value is expected. " this.GetUsage(caller.Name))
 			return
 		}
 		
 		regExp := "^(?:(\d{1,2})h)?(?:(\d{1,2})m)?(?:(\d{1,2})s)?$"
 		
 		if not RegExMatch(arg.Value, regExp, &info) {
-			output := this.GetInvalidFormat(caller.Name)
+			output.WriteError(this.GetInvalidFormat(caller.Name))
 			return
 		}
 		
@@ -126,16 +125,16 @@ class SleepShutdown {
 		atTime := DateAdd(A_Now, totalSeconds, "Seconds")
 		caller.ScheduledAt := atTime
 		
-		output := this.GetScheduledOutput(caller.Name, atTime, totalSeconds)
+		output.Write(this.GetScheduledOutput(caller.Name, atTime, totalSeconds))
 	}
 	
 	/**
 	 * @param {SleepShutdown.Caller} caller 
-	 * @param {String} output 
+	 * @param {CommandRunner.Output} output
 	 */
-	static HandleOff(caller, &output) {
+	static HandleOff(caller, output) {
 		if not caller.ScheduledAt {
-			output := Format("No scheduled {} is found", caller.Name)
+			output.WriteError(Format("No scheduled {} is found", caller.Name))
 			return
 		}
 		
@@ -144,21 +143,21 @@ class SleepShutdown {
 		SetTimer(caller.Func, 0)
 		caller.ScheduledAt := ""
 		
-		output := Format("Scheduled {} at {} is turned off", caller.Name, atFormatted)
+		output.Write(Format("Scheduled {} at {} is turned off", caller.Name, atFormatted))
 	}
 	
 	/**
 	 * @param {SleepShutdown.Caller} caller 
-	 * @param {String} output 
+	 * @param {CommandRunner.Output} output
 	 */
-	static HandleShow(caller, &output) {
+	static HandleShow(caller, output) {
 		if not caller.ScheduledAt {
-			output := Format("No scheduled {} is found", caller.Name)
+			output.Write(Format("No scheduled {} is found", caller.Name))
 			return
 		}
 		
 		totalSeconds := DateDiff(caller.ScheduledAt, A_Now, "Seconds")
-		output := this.GetScheduledOutput(caller.Name, caller.ScheduledAt, totalSeconds)
+		output.Write(this.GetScheduledOutput(caller.Name, caller.ScheduledAt, totalSeconds))
 	}
 	
 	static GetScheduledOutput(callerName, atTime, totalSeconds)
@@ -173,15 +172,22 @@ class SleepShutdown {
 			Usage: {1} COMMAND
 
 			Commands:
-			in <in-time>:  Schedules an event in the specified time
-			at <at-time>:  Schedules an event at the specified time
-			show:          Displays the scheduled event
-			off:           Disables the scheduled event
+			 in <in-time>:  Schedules an event in the specified time
+			 at <at-time>:  Schedules an event at the specified time
+			 show:          Displays the scheduled event
+			 off:           Disables the scheduled event
 
-			<in-time>: [[N]Nh][[N]Nm][[N]Ns] (at least one unit required)
-			<at-time>: [h]h:mm[:ss]{am|pm}
+			Time formats:
+			 <in-time>:  [[N]Nh][[N]Nm][[N]Ns] (at least one unit required)
+			             - N: any number between 0-9
+			             - h: hours
+			             - m: minutes
+			             - s: seconds
+			 <at-time>:  [h]h:mm[:ss]{am|pm}
 			
-			Examples: {1} at 1:15pm, {1} in 1h15m
+			Examples:
+			 -> {1} at 1:15pm
+			 -> {1} in 1h15m
 		)", callerName)
 	
 	static GetInvalidFormat(callerName) => "Invalid time format. " this.GetUsage(callerName)

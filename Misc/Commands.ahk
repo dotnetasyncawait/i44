@@ -26,7 +26,7 @@ class Commands {
 	
 	static _Calc(*) => Run("calc")
 	
-	static _Tt(_, hwnd, &output) {
+	static _Tt(_, hwnd, output) {
 		switch app := WinGetProcessName(hwnd) {
 		case Rider.ProcessName:
 			WinActivate(hwnd)
@@ -35,81 +35,84 @@ class Commands {
 			WinActivate(hwnd)
 			VsCode.ToTabs()
 		default: 
-			this._NotSupportedCommand(app, &output, Rider.ProcessName, VsCode.ProcessName)
+			this._NotSupportedCommand(app, output, Rider.ProcessName, VsCode.ProcessName)
 		}
 	}
 	
-	static _Ts(_, hwnd, &output) {
+	static _Ts(_, hwnd, output) {
 		switch app := WinGetProcessName(hwnd) {
 		case VsCode.ProcessName:
 			WinActivate(hwnd)
 			VsCode.ToSpaces()
 		default:
-			this._NotSupportedCommand(app, &output, VsCode.ProcessName)
+			this._NotSupportedCommand(app, output, VsCode.ProcessName)
 		}
 	}
 	
-	static _Tb(_, hwnd, &output) {
+	static _Tb(_, hwnd, output) {
 		switch app := WinGetProcessName(hwnd) {
 		case Rider.ProcessName:
 			WinActivate(hwnd)
 			Rider.ToggleToolbar()
 		default:
-			this._NotSupportedCommand(app, &output, Rider.ProcessName)
+			this._NotSupportedCommand(app, output, Rider.ProcessName)
 		}
 	}
 	
-	static _Rat(_, hwnd, &output) {
+	static _Rat(_, hwnd, output) {
 		switch app := WinGetProcessName(hwnd) {
 		case OperaGX.ProcessName:
 			WinActivate(hwnd)
 			OperaGX.ReloadAllTabs()
 		default:
-			this._NotSupportedCommand(app, &output, OperaGX.ProcessName)
+			this._NotSupportedCommand(app, output, OperaGX.ProcessName)
 		}
 	}
 	
-	static _Bs(_, hwnd, &output) {
+	static _Bs(_, hwnd, output) {
 		switch app := WinGetProcessName(hwnd) {
 		case Rider.ProcessName:
 			WinActivate(hwnd)
 			Rider.BuildSolution()
 		default: 
-			this._NotSupportedCommand(app, &output, Rider.ProcessName)
+			this._NotSupportedCommand(app, output, Rider.ProcessName)
 		}
 	}
 
-	static _Rp(_, hwnd, &output) {
+	static _Rp(_, hwnd, output) {
 		switch app := WinGetProcessName(hwnd) {
 		case Rider.ProcessName:
 			WinActivate(hwnd)
 			Rider.NugetRestore()
 		default: 
-			this._NotSupportedCommand(app, &output, Rider.ProcessName)
+			this._NotSupportedCommand(app, output, Rider.ProcessName)
 		}
 	}
 	
-	static _Inlh(_, hwnd, &output) {
+	static _Inlh(_, hwnd, output) {
 		switch app := WinGetProcessName(hwnd) {
 		case Rider.ProcessName:
 			WinActivate(hwnd)
 			Rider.ToggleInlayHints()
 		default: 
-			this._NotSupportedCommand(app, &output, Rider.ProcessName)
+			this._NotSupportedCommand(app, output, Rider.ProcessName)
 		}
 	}
 	
-	static _Hid(args, _, &output) {
+	/**
+	  * @param {CommandRunner.Output} output 
+	 */
+	static _Hid(args, _, output) {
 		if not args.Next(&arg) || arg.Value == "-h" {
-			output := GetUsage()
+			output.Write(GetUsage())
 			return
 		}
 		
 		switch arg.Value {
 			case "ping":
-				output := I44.Ping(&ms, &us) ? Format("{} ms`n{} us", ms, us) : "Keyboard not responsive."
+				output.Write(I44.Ping(&ms, &us) ? Format("{} ms ({} us)", ms, us) : "Keyboard not responsive.")
 			default:
-				output := Format("Invalid argument '{}'. {}", arg.Value, GetUsage())
+				output.WriteUnknownCommand(arg.Value, GetUsage())
 		}
 		
 		return
@@ -119,19 +122,20 @@ class Commands {
 			Usage: hid [OPTIONS] COMMAND
 			
 			Commands:
-			ping:  Ping the keyboard
+			 ping:  Ping the keyboard
 			
 			Options:
-			-h:  Print usage
+			 -h:  Print usage
 		)"
 	}
 	
 	/**
 	 * Binary to Hex and Decimal.
+	 * @param {CommandRunner.Output} output
 	 */
-	static _Bin(args, _, &output) {
+	static _Bin(args, _, output) {
 		if args.IsEmpty {
-			output := "Empty input."
+			output.WriteError("empty input.")
 			return
 		}
 		
@@ -139,11 +143,11 @@ class Commands {
 			value := arg.Value
 			
 			if not TryBinaryToInteger(value, &num) {
-				output := Format("Invalid value '{}' (position {}).", value, A_Index)
+				output.WriteError(Format("value '{}' is not a valid binary number.", value))
 				return
 			}
 			
-			output .= Format("- {} -> 0x{:X} -> {}`n", value, num, num)
+			output.Write(Format("- {} -> 0x{:X} -> {}", value, num, num))
 		}
 		
 		return
@@ -171,10 +175,11 @@ class Commands {
 
 	/**
 	 * Decimal to Hex and Binary.
+	 * @param {CommandRunner.Output} output
 	 */
-	static _Dec(args, _, &output) {
+	static _Dec(args, _, output) {
 		if args.IsEmpty {
-			output := "Empty input."
+			output.WriteError("empty input.")
 			return
 		}
 		
@@ -182,21 +187,22 @@ class Commands {
 			value := arg.Value
 			
 			if not IsInteger(value) {
-				output := Format("Invalid value '{}' (position {}).", value, A_Index)
+				output.WriteError(Format("value '{}' is not a valid decimal number.", value))
 				return
 			}
 			
 			num := Integer(value)
-			output .= Format("- {} -> 0x{:X} -> {}`n", num, num, IntegerToBinary(num))
+			output.Write(Format("- {} -> 0x{:X} -> {}", num, num, IntegerToBinary(num)))
 		}
 	}
 	
 	/**
 	 * Hex to Decimal and Binary.
+	 * @param {CommandRunner.Output} output
 	 */
-	static _Hex(args, _, &output) {
+	static _Hex(args, _, output) {
 		if args.IsEmpty {
-			output := "Empty input."
+			output.WriteError("empty input.")
 			return
 		}
 		
@@ -204,7 +210,7 @@ class Commands {
 			value := arg.Value
 			
 			if not IsXDigit(value) {
-				output := Format("Invalid value '{}' (position {}).", value, A_Index)
+				output.WriteError(Format("value '{}' is not a valid hexadecimal number.", value))
 				return
 			}
 			
@@ -213,17 +219,19 @@ class Commands {
 			}
 			
 			num := Integer(value)
-			output .= Format("- {} -> {} -> {}`n", value, num, IntegerToBinary(num))
+			output.Write(Format("- {} -> {} -> {}", value, num, IntegerToBinary(num)))
 		}
 	}
 	
 	; --- helpers ---
 	
-	static _NotSupportedCommand(app, &output, supportedList*) {
-		output := Format("App «{1}» does not support this command.`n`nApps supporting:", app)
-		
+	/**
+	 * @param {CommandRunner.Output} output 
+	 */
+	static _NotSupportedCommand(app, output, supportedList*) {
+		output.Write(Format("App '{}' does not support this command.`nApps supporting:", app))
 		for app in supportedList {
-			output .= "`n- " app
+			output.Write("- " app)
 		}
 	}
 }

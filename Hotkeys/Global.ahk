@@ -20,7 +20,10 @@
 
 +!^0::Reload()
 
-+#!^0::ExitApp()
++#!^0:: {
+	Explorer.Open(Paths.ScriptDir)
+	ExitApp()
+}
 
 #SuspendExempt False
 
@@ -58,7 +61,7 @@ F21::DragWindow(ThisHotkey)
 	}
 }
 
-#e::ComObject("Shell.Application").Explore(Paths.Desktop)
+#e::Explorer.Open(Paths.Desktop)
 
 ^0:: {
 	switch {
