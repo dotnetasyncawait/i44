@@ -51,6 +51,8 @@
 +LButton::DragWindow("LButton")
 F21::DragWindow(ThisHotkey)
 
+F23::Mic.ToggleMute()
+
 +^s:: {
 	switch {
 	case Rider.IsActive:    Rider.OpenSettings()
@@ -130,7 +132,7 @@ F21::DragWindow(ThisHotkey)
 
 ^4:: {
 	switch {
-	case Rider.IsActive:  Rider.Database()
+	case Rider.IsActive: Rider.Database()
 	case WindowsTerminal.IsActive: WindowsTerminal.SwitchToTab3()
 	default: SendInput("{Blind}4")
 	}

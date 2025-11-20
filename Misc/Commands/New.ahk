@@ -1,6 +1,5 @@
 #Include <Misc\CommandRunner>
 #Include <Apps\VsCode>
-#Include <Apps\WindowsTerminal>
 #Include <Apps\Explorer>
 
 class New {

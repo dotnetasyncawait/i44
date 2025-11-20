@@ -35,6 +35,7 @@ A_HotkeyInterval := 0
 #Include Hotkeys\Modes\Mouse.ahk
 #Include Hotkeys\Modes\Select.ahk
 
+#Include Misc\Mic.ahk
 #Include Misc\Hotstrings.ahk
 #Include Misc\Commands.ahk
 
