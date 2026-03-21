@@ -88,10 +88,9 @@ l:: {
 	case Rider.IsActive:  Rider.QuickDocumentation()
 	case VsCode.IsActive: VsCode.ShowOrFocusHover()
 	
-	case hwnd := OperaGX.IsActive:
-		title := WinGetTitle(hwnd)
-		switch {
-		case OperaGX.IsYoutube(title): OperaGX.ToggleLoopMode()
+	case hwnd := Chrome.IsActive:
+		if Chrome.IsYoutube(WinGetTitle(hwnd)) {
+			Chrome.ToggleLoopMode()
 		}
 		
 	case Discord.IsActive:  Discord.ToggleMemberListOrVoiceTextChat()
@@ -111,6 +110,7 @@ p:: {
 
 +p:: {
 	switch {
+	case Chrome.IsActive: Chrome.ReloadTabIgnoringCache()
 	case OperaGX.IsActive: OperaGX.ReloadWithoutCache()
 	}
 }
@@ -170,6 +170,7 @@ y:: {
 	case Rider.IsActive:   Rider.ParameterInfo()
 	case VsCode.IsActive:  VsCode.ParameterHints()
 	case OperaGX.IsActive: OperaGX.SpeedDial()
+	case Chrome.IsActive:  Chrome.OpenHomePage()
 	case Discord.IsActive: Discord.EditMessage()
 	}
 }

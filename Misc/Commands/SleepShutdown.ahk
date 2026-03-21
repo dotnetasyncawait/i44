@@ -85,8 +85,8 @@ class SleepShutdown {
 		atTime := Format("{}{}{}{:02}{:02}{:02}", A_Year, A_Mon, A_MDay, h, m, s)
 		totalSeconds := DateDiff(atTime, A_Now, "Seconds")
 		
-		; If the time is in the past, schedule it for tomorrow
-		if totalSeconds < 0 {
+		; If the time is in the past or now, schedule it for tomorrow
+		if totalSeconds < 1 {
 			atTime := DateAdd(atTime, 1, "Days")
 			totalSeconds := 86400 + totalSeconds
 		}
@@ -120,6 +120,11 @@ class SleepShutdown {
 		s := (t := info[3]) ? t : 0
 		
 		totalSeconds := (h * 3600) + (m * 60) + s
+		if totalSeconds < 1 {
+			caller.Func.Call()
+			return
+		}
+		
 		SetTimer(caller.Func, -(totalSeconds * 1000))
 		
 		atTime := DateAdd(A_Now, totalSeconds, "Seconds")

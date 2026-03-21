@@ -14,7 +14,7 @@ class Mic {
 	static _tray := TrayIcon(42)
 		.Add(this._gMic, this._mic)
 		.Add(this._rMic, this._mic " (muted)")
-		.OnDoubleClick((*) => this.ToggleMute())
+		.OnLeftClick((*) => this.ToggleMute())
 		.OnRightClick((*) => this._OpenRecordingDevices())
 	
 	static __New() {

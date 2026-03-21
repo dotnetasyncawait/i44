@@ -25,6 +25,11 @@
 	ExitApp()
 }
 
+F23:: {
+	Mic.ToggleMute()
+	KeyWait(ThisHotkey)
+}
+
 #SuspendExempt False
 
 
@@ -48,10 +53,16 @@
 	}
 }
 
-+LButton::DragWindow("LButton")
-F21::DragWindow(ThisHotkey)
+^Space:: {
+	switch {
+	case Chrome.IsActive: Chrome.Tabs()
+	default: SendEvent("{Blind}{Space}")
+	}
+}
 
-F23::Mic.ToggleMute()
++LButton::DragWindow("LButton")
+
+F21::DragWindow(ThisHotkey)
 
 +^s:: {
 	switch {
@@ -69,6 +80,7 @@ F23::Mic.ToggleMute()
 	switch {
 	case OperaGX.IsActive: OperaGX.SwitchToLastTab()
 	case WindowsTerminal.IsActive: WindowsTerminal.SwitchToLastTab()
+	case Chrome.IsActive: Chrome.JumpToRightmostTab()
 	default: SendInput("{Blind}0")
 	}
 }

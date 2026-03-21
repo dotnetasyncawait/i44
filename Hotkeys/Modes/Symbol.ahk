@@ -33,6 +33,7 @@ Insert:: {
 >+2:: { ; @
 	switch {
 	case OperaGX.IsActive: OperaGX.DefaultPlaybackSpeed()
+	case Chrome.IsActive:  Chrome.DefaultPlaybackSpeed()
 	}
 }
 
@@ -41,6 +42,7 @@ Insert:: {
 	case Rider.IsActive:   Rider.PrevMethod()
 	case VsCode.IsActive:  VsCode.PrevMember()
 	case OperaGX.IsActive: OperaGX.DecreasePlaybackSpeed()
+	case Chrome.IsActive:  Chrome.DecreasePlaybackSpeed()
 	}
 }
 
@@ -49,6 +51,7 @@ Insert:: {
 	case Rider.IsActive:   Rider.NextMethod()
 	case VsCode.IsActive:  VsCode.NextMember()
 	case OperaGX.IsActive: OperaGX.IncreasePlaybackSpeed()
+	case Chrome.IsActive:  Chrome.IncreasePlaybackSpeed()
 	}
 }
 
@@ -70,7 +73,9 @@ Insert:: {
 	return
 }
 
-<+7::SendInput("{Blind}{U+2014}") ; —
+<+>+/::SendEvent("{U+2013}") ; LShift + ? -> '–' (En dash)
+
+<+7::SendEvent("{U+2014}") ; '—' (Em dash)
 
 <+8::SendInput("->")
 
