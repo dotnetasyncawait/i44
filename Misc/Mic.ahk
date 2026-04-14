@@ -1,9 +1,9 @@
 #Include <Common\TrayIcon>
+#Include <Misc\CommandRunner>
 #Include <Misc\XAudio2>
+#Include <Misc\Audio>
 
 class Mic {
-	static _mic := "Microphone (FIFINE K670 Microphone)"
-	
 	static _gMic := "media\greenMic.ico"
 	static _rMic := "media\redMic.ico"
 	
@@ -11,22 +11,27 @@ class Mic {
 	static _soundOn   := "media\Windows Hardware Insert.wav"
 	static _soundOff  := "media\Windows Hardware Fail.wav"
 	
-	static _tray := TrayIcon(42)
-		.Add(this._gMic, this._mic)
-		.Add(this._rMic, this._mic " (muted)")
-		.OnLeftClick((*) => this.ToggleMute())
-		.OnRightClick((*) => this._OpenRecordingDevices())
-	
 	static __New() {
-		this._tray.Display(SoundGetMute(, this._mic))
+		/**
+		 * @type {Audio.Device}
+		 */
+		this._mic := m := Audio.FindDevice("Microphone (FIFINE K670 Microphone)", DeviceType.Capture)
+		if not m {
+			throw Error("Mic not found")
+		}
+		
+		this._tray := TrayIcon(42)
+			.Add(this._gMic, m.DeviceName)
+			.Add(this._rMic, m.DeviceName " (muted)")
+			.OnLeftClick((*) => this.ToggleMute())
+			.OnRightClick((*) => this._OpenRecordingDevices())
+		
+		this._tray.Display(m.GetMute())
 		CommandRunner.AddCommands("mic", this._CommandHandler.Bind(this))
 	}
 	
 	static ToggleMute() {
-		mute := !SoundGetMute(, this._mic)
-		
-		SoundSetMute(mute, , this._mic)
-		this._tray.Display(mute)
+		this._tray.Display(mute := this._mic.ToggleMute())
 		
 		if this._playSound {
 			XAudio2.PlaySound(mute ? this._soundOff : this._soundOn, 0.5)
@@ -48,19 +53,19 @@ class Mic {
 			return
 		}
 		
-		switch value := arg.Value {
+		switch command := arg.Value {
 		case "setv":
 			if not args.Next(&arg) {
-				output.WriteError("value is expected.")
-			} else if not IsNumber(arg.Value) {
-				output.WriteError("value must be Integer or Float.")
+				output.WriteError("volume is expected: mic setv <volume>")
+			} else if not IsInteger(volume := arg.Value) {
+				output.WriteError("volume must be an integer in the range 0-100.")
 			} else {
-				SoundSetVolume(arg.Value, , this._mic)
-				output.Write("New volume: " SoundGetVolume(, this._mic))
+				this._mic.SetVolume(volume)
+				output.Write("New volume: " this._mic.GetVolume())
 			}
-		case "getv":  output.Write("Volume: " SoundGetVolume(, this._mic))
+		case "getv":  output.Write("Volume: " this._mic.GetVolume())
 		case "sound": output.Write("Mic sound is toggled " ((this._playSound ^= 1) ? "on." : "off."))
-		default:      output.WriteUnknownCommand(value, "TODO: usage")
+		default:      output.WriteUnknownCommand(command, "TODO: usage")
 		}
 	}
 }

@@ -73,9 +73,9 @@ Insert:: {
 	return
 }
 
-<+>+/::SendEvent("{U+2013}") ; LShift + ? -> '–' (En dash)
+<+>+/::SendEvent("{U+2014}") ; '—' (Em dash, LShift + ?)
 
-<+7::SendEvent("{U+2014}") ; '—' (Em dash)
+<+7::SendEvent("{U+2013}") ; '–' (En dash)
 
 <+8::SendInput("->")
 
